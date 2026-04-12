@@ -90,7 +90,7 @@ Sign extension always uses instruction bit 31
 
 |U-immediate|
 |-----------|
-|30 | 30-20| 19-12 | 11-0 |
+|31 | 30-20| 19-12 | 11-0 |
 |inst[31]| inst[30:20] | inst[19:12] | 0 |
 
 |B-immediate|

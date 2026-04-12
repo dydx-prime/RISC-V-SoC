@@ -8,7 +8,9 @@ module bench();
    SOC uut(
      .CLK(CLK),
      .RESET(RESET),
-     .LEDS(LEDS)
+     .LEDS(LEDS),
+     .RXD(RXD),
+     .TXD(TXD)
    );
 
 
