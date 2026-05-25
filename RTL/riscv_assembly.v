@@ -1,8 +1,10 @@
 /*
  * A simple assembler for RiscV written in VERILOG.
+
  * See table page 104 of RiscV instruction manual.
  * Bruno Levy, March 2022
  */
+
 
 // Machine code will be generated in MEM,
 // starting from address 0 (can be changed below,
@@ -25,6 +27,7 @@
 //   1) simulate with icarus, it will complain about uninitialized labels,
 //      and will display for each Label() statement the address to be used
 //      (in the present case, it is 8)
+
 //   2) replace the declaration of the label:
 //      integer L0_ = 8;
 //      re-simulate with icarus
@@ -39,8 +42,10 @@
 // NOTE: to be checked, LUI, AUIPC take as argument
 //     pre-shifted constant, unlike in GNU assembly
 
+
 integer memPC;
 initial memPC = 0;
+
 
 /***************************************************************************/
 
@@ -48,6 +53,7 @@ initial memPC = 0;
  * Register names.
  * Looks stupid, but makes assembly code more legible (without it,
  * one does not make the difference between immediate values and 
+
  * register ids).
  */ 
 
@@ -71,6 +77,7 @@ task RType;
    input [6:0] opcode;
    input [4:0] rd;   
    input [4:0] rs1;
+
    input [4:0] rs2;
    input [2:0] funct3;
    input [6:0] funct7;
@@ -87,6 +94,7 @@ task ADD;
    RType(7'b0110011, rd, rs1, rs2, 3'b000, 7'b0000000);
 endtask
    
+
 task SUB;
    input [4:0] rd;
    input [4:0] rs1;
@@ -104,6 +112,7 @@ endtask
 task SLT;
    input [4:0] rd;
    input [4:0] rs1;
+
    input [4:0] rs2;
    RType(7'b0110011, rd, rs1, rs2, 3'b010, 7'b0000000);
 endtask
@@ -113,23 +122,27 @@ task SLTU;
    input [4:0] rs1;
    input [4:0] rs2;
    RType(7'b0110011, rd, rs1, rs2, 3'b011, 7'b0000000);
+
 endtask
 
 task XOR;
    input [4:0] rd;
    input [4:0] rs1;
    input [4:0] rs2;
+
    RType(7'b0110011, rd, rs1, rs2, 3'b100, 7'b0000000);
 endtask
 
 task SRL;
    input [4:0] rd;
+
    input [4:0] rs1;
    input [4:0] rs2;
    RType(7'b0110011, rd, rs1, rs2, 3'b101, 7'b0000000);
 endtask
 
 task SRA;
+
    input [4:0] rd;
    input [4:0] rs1;
    input [4:0] rs2;
@@ -140,11 +153,13 @@ task OR;
    input [4:0] rd;
    input [4:0] rs1;
    input [4:0] rs2;
+
    RType(7'b0110011, rd, rs1, rs2, 3'b110, 7'b0000000);
 endtask
 
 task AND;
    input [4:0] rd;
+
    input [4:0] rs1;
    input [4:0] rs2;
    RType(7'b0110011, rd, rs1, rs2, 3'b111, 7'b0000000);
@@ -176,12 +191,16 @@ task ADDI;
    begin
       IType(7'b0010011, rd, rs1, imm, 3'b000);
    end
+
 endtask
 
 task SLTI;
    input [4:0]  rd;   
+
    input [4:0]  rs1;
+
    input [31:0] imm;
+
    begin
       IType(7'b0010011, rd, rs1, imm, 3'b010);
    end
@@ -268,6 +287,7 @@ task JType;
       memPC = memPC + 4;
    end
 endtask
+
    
 task JAL;
    input [4:0] rd;
@@ -290,9 +310,11 @@ endtask
 
 /***************************************************************************/   
 
+
 /*
  * Branch instructions.
  */    
+
    
 task BType;
    input [6:0]  opcode;
@@ -315,6 +337,7 @@ task BEQ;
    end
 endtask
 
+
 task BNE;
    input [4:0]  rs1;
    input [4:0]  rs2;   
@@ -325,7 +348,9 @@ task BNE;
 endtask
 
 task BLT;
+
    input [4:0]  rs1;
+
    input [4:0]  rs2;   
    input [31:0] imm;
    begin
@@ -342,12 +367,14 @@ task BGE;
    end
 endtask
 
+
 task BLTU;
    input [4:0]  rs1;
    input [4:0]  rs2;   
    input [31:0] imm;
    begin
       BType(7'b1100011, rs1, rs2, imm, 3'b110);
+
    end
 endtask
 
@@ -368,11 +395,14 @@ endtask
 
 task UType;
    input [6:0]  opcode;
+
    input [4:0]  rd;
    input [31:0] imm;
    begin
       MEM[memPC[31:2]] = {imm[31:12], rd, opcode};
+
       memPC = memPC + 4;
+
    end
 endtask
 
@@ -382,9 +412,11 @@ task LUI;
    begin
       UType(7'b0110111, rd, imm);
    end
+
 endtask
 
 task AUIPC;
+
    input [4:0]  rd;
    input [31:0] imm;
    begin
@@ -403,6 +435,7 @@ task LB;
    input [4:0]  rs1;
    input [31:0] imm;
    begin
+
       IType(7'b0000011, rd, rs1, imm, 3'b000);
    end
 endtask      
@@ -412,16 +445,21 @@ task LH;
    input [4:0]  rs1;
    input [31:0] imm;
    begin
+
       IType(7'b0000011, rd, rs1, imm, 3'b001);
    end
 endtask      
    
 task LW;
    input [4:0]  rd;
+
    input [4:0]  rs1;
+
    input [31:0] imm;
+
    begin
       IType(7'b0000011, rd, rs1, imm, 3'b010);
+
    end
 endtask      
 
@@ -455,6 +493,7 @@ task SType;
    input [4:0]  rs2;   
    input [31:0] imm;
    input [2:0]  funct3;
+
    begin
       MEM[memPC[31:2]] = {imm[11:5], rs2, rs1, funct3, imm[4:0], opcode};
       memPC = memPC + 4;
@@ -468,7 +507,9 @@ endtask
 //  sw ra, 0(sp)   
    
 task SB;
+
    input [4:0]  rs1;
+
    input [4:0]  rs2;   
    input [31:0] imm;
    begin
@@ -481,6 +522,7 @@ task SH;
    input [4:0]  rs2;   
    input [31:0] imm;
    begin
+
       SType(7'b0100011, rs2, rs1, imm, 3'b001);
    end
 endtask   
@@ -491,20 +533,24 @@ task SW;
    input [31:0] imm;
    begin
       SType(7'b0100011, rs2, rs1, imm, 3'b010);
+
    end
 endtask   
    
 /***************************************************************************/   
    
+
 /*
  * SYSTEM instructions
  */
+
 
 task FENCE;
    input [3:0] pred;
    input [3:0] succ;
    begin
       MEM[memPC[31:2]] = {4'b0000, pred, succ, 5'b00000, 3'b000, 5'b00000, 7'b1110011};
+
       memPC = memPC + 4;
    end
 endtask   
@@ -523,20 +569,25 @@ task ECALL;
    end
 endtask   
    
+
 task EBREAK;
    begin
+
       MEM[memPC[31:2]] = {12'b000000000001, 5'b00000, 3'b000, 5'b00000, 7'b1110011};
       memPC = memPC + 4;
    end
+
 endtask   
 
 task CSRRW;
    input [4:0] rd;
    input [11:0] csr;
    input [4:0] rs1;
+
    begin
       MEM[memPC[31:2]] = {csr, rs1, 3'b001, rd, 7'b1110011};
       memPC = memPC + 4;      
+
    end
 endtask
 
@@ -558,14 +609,19 @@ task CSRRC;
       MEM[memPC[31:2]] = {csr, rs1, 3'b011, rd, 7'b1110011};
       memPC = memPC + 4;      
    end
+
 endtask
 
 task CSRRWI;
    input [4:0] rd;
+
    input [11:0] csr;
+
    input [31:0] imm;
+
    begin
       MEM[memPC[31:2]] = {csr, imm[4:0], 3'b101, rd, 7'b1110011};
+
       memPC = memPC + 4;      
    end
 endtask
@@ -580,7 +636,9 @@ task CSRRSI;
    end
 endtask
 
+
 task CSRRCI;
+
    input [4:0] rd;
    input [11:0] csr;
    input [31:0] imm;
@@ -604,7 +662,7 @@ endtask
    integer ASMerror=0;
    
    task Label;
-      inout integer L;
+      input integer L;
       begin
 `ifdef BENCH
 	if(L[0] === 1'bx) begin
@@ -616,9 +674,12 @@ endtask
 	   ASMerror = 1;
 	end
 	$display("Label:",memPC);
-`endif	 
+`endif
+	L = memPC;
      end
+
    endtask
+
 
    function [31:0] LabelRef;
       input integer L;
@@ -643,6 +704,7 @@ endtask
 `endif
       end
    endtask
+
    
    
 /****************************************************************************/
@@ -656,6 +718,7 @@ endtask
    localparam sp   = x2;
    localparam gp   = x3;
    localparam tp   = x4;
+
    localparam t0   = x5;
    localparam t1   = x6;
    localparam t2   = x7;
@@ -695,11 +758,13 @@ task NOP;
    end
 endtask
 
+
 // See https://stackoverflow.com/questions/50742420/
 // risc-v-build-32-bit-constants-with-lui-and-addi
 // Add imm[11] << 12 to the constant passed to LUI,
 // so that it cancels sign expansion done by ADDI
 // if imm[11] is 1.
+
 task LI;
    input [4:0]  rd;
    input [31:0] imm;
@@ -709,11 +774,13 @@ task LI;
       end else if($signed(imm) >= -2048 && $signed(imm) < 2048) begin
 	 ADDI(rd,zero,imm);
       end else begin
+
 	 LUI(rd,imm + (imm[11] << 12)); // cancel sign expansion
 	 if(imm[11:0] != 0) begin
 	    ADDI(rd,rd,imm[11:0]);
 	 end
       end
+
    end
 endtask
 
@@ -735,6 +802,7 @@ task MV;
    input [4:0]  rd;
    input [4:0] 	rs1;
    begin
+
       ADD(rd,rs1,zero);
    end
 endtask
@@ -761,6 +829,7 @@ task BEQZ;
    begin
       BEQ(rs1,x0,imm);
    end
+
 endtask
 
 task BNEZ;
@@ -776,7 +845,7 @@ task BGT;
    input [4:0]  rs2;   
    input [31:0] imm;
    begin
-      
+      BLT(rs2,rs1,imm);
    end
 endtask
 
@@ -801,6 +870,7 @@ task DATAB;
       memPC = memPC+4;
    end
 endtask
+
 
       
    
