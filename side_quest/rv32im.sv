@@ -4,8 +4,7 @@ module rv32im_top (
 );
 
   logic [31:0] pc, pc_next, instruction;
-  logic [31:0] rd1, rd2, imm_ext, alu_result, read_data, result;
-  logic zero;
+  logic [31:0] read_data, result;
   
   // PC
   always_ff @(posedge clk) begin
@@ -13,39 +12,64 @@ module rv32im_top (
     else pc <= pc_next;
   end
 
-
 //---------------- generating immediates
-  assign i_imm = { {21{instruction[31]}}, instruction[30:25], instruction[24:21], instruction[20]};
-  assign s_imm = { {21{instruction[31]}}, instruction[30:25], instruction[11: 8], instruction[ 7]};
-  assign u_imm = { instruction[31], instruction[30:20], instruction[19:12], 12'b0};
-  assign b_imm = { {20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0}; 
-  assign j_imm = { {12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:25], instruction[24:21], 1'b0};
+  logic i_imm = { {21{instruction[31]}}, instruction[30:25], instruction[24:21], instruction[20]};
+  logic s_imm = { {21{instruction[31]}}, instruction[30:25], instruction[11: 8], instruction[ 7]};
+  logic u_imm = { instruction[31], instruction[30:20], instruction[19:12], 12'b0};
+  logic b_imm = { {20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0}; 
+  logic j_imm = { {12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:25], instruction[24:21], 1'b0};
+
+  assign pc_out = pc; // capture pc
+  logic pc4 = pc_out + 32'd4; // add 4 to pc
+
+  imem imem1(.a(pc_out[9:0]), .rd(instruction));
+ 
+  logic [3:0] alu_op;
+  logic branch_en, mem_read, mem_to_reg;
+  logic mem_write, alu_src, reg_write;
+  control_unit ctrl(.opcode     (instruction[6:0]),
+                    .funct3     (instruction[14:12]),
+                    .funct7     (instruction[31:25]),
+                    
+                    .branch_en  (branch_en),
+                    .mem_read   (mem_read),
+                    .mem_to_reg (mem_to_reg),
+                    .alu_op     (alu_op),
+                    .mem_write  (mem_write),
+                    .alu_src    (alu_src),
+                    .reg_write  (reg_write)
+                    );
+  
+  logic [31:0] read_data_out1, read_data_out2;
+  registerfile rf(.clk (clk),
+                  .rs1 (instruction[19:15]),
+                  .rs2 (instruction[24:20]),
+                  .rd  (instruction[11:7]),
+                  .wd  ([31:0]), // output from data memory mux
+                  .we  (reg_write), // from control unit 
+
+                  .rd1 (read_data_out1), // read data
+                  .rd2 (read_data_out2)
+                  );
+
+  logic [31:0] alu_result;
+  logic isZero;
+  alu alu1(.alu_op     (alu_op),
+           .srcA       (read_data_out1), // rs1
+           .srcB       (read_data_out2), // rs2 or imm+sign_extended
+
+           .alu_result (alu_result),
+           .isZero     (isZero)
+           );
 
 
-  assign pc_out = pc;
+  logic [31:0] dmem_read_data;
+  dmem dmem1(.clk(clk),
+             .write_en (mem_write),
+             .addr     (alu_result),
+             .wd       (read_data_out2),
 
+             .rd       (dmem_read_data) // read data
+    );
 
-    // ── Submodules (instantiate yours here) ─────────────
-    imem       u_imem  (.addr(pc),         .instr(instr));
-
-    imm_gen    u_imm   (.instr(instr),     .imm_ext(imm_ext));
-    reg_file   u_rf    (.clk, .rst_n,
-                        .rs1(instr[19:15]), .rs2(instr[24:20]),
-                        .rd (instr[11: 7]),
-
-                        .we(reg_write),    .wd(result),
-                        .rd1(rd1),         .rd2(rd2));
-    alu        u_alu   (.a(alu_a), .b(alu_b), .op(alu_op),
-                        .result(alu_result), .zero(zero));
-
-    dmem       u_dmem  (.clk, .addr(alu_result),
-
-                        .wd(rd2), .we(mem_write),
-                        .funct3(instr[14:12]),
-                        .rd(read_data));
-    control    u_ctrl  (.opcode(instr[6:0]),
-                        .funct3(instr[14:12]),
-                        .funct7(instr[31:25]),
-
-                        /* ... outputs ... */);
 endmodule

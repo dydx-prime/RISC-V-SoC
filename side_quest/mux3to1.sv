@@ -7,11 +7,13 @@ module mux3to1 (
   output logic [31:0] src
 );
 
-case (sel)
-  2'b00: src = signal_00;
-  2'b01: src = signal_10;
-  2'b10: src = signal_10;
-  default : src = signal_00;
-endcase
+always_comb begin
+  case (sel)
+    2'b00: src = signal_00;
+    2'b01: src = signal_01;
+    2'b10: src = signal_10;
+    default : src = signal_00;
+  endcase
+end
 
 endmodule

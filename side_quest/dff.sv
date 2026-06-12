@@ -10,7 +10,7 @@ module dff #(
 );
 
 always_ff @(posedge clk) begin
-  if(!reset) q <= 32'b0;
+  if(!reset) q <= {WIDTH{1'b0}};
   else q <= d;
 end
 

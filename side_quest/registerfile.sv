@@ -5,8 +5,8 @@ module registerfile (
   input [4:0] rd,
   input [31:0] wd, // data to write into rd
   input we, // write enable signal
-  output logic [31:0] rd1,
-  output logic [31:0] rd2
+  output logic [31:0] rd1, // read data
+  output logic [31:0] rd2  // read data
 );
 
 logic [31:0] register [31:0];
