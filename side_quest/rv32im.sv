@@ -3,6 +3,8 @@ module rv32im_top (
   output logic [31:0] pc_out   // for debug
 );
 
+//TODO refactor nets, implement LUI, AUIPC, JAL, JALR, test, combinational blocks
+
   logic [31:0] pc, pc_next, instruction;
   logic [31:0] read_data, result;
   
@@ -11,18 +13,22 @@ module rv32im_top (
     if(!rst_n) pc <= 32'b0;
     else pc <= pc_next;
   end
+  
+  assign pc_out = pc; 
+  logic pc4 = pc + 32'd4; // add 4 to pc
 
-//---------------- generating immediates
-  logic i_imm = { {21{instruction[31]}}, instruction[30:25], instruction[24:21], instruction[20]};
-  logic s_imm = { {21{instruction[31]}}, instruction[30:25], instruction[11: 8], instruction[ 7]};
-  logic u_imm = { instruction[31], instruction[30:20], instruction[19:12], 12'b0};
-  logic b_imm = { {20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0}; 
-  logic j_imm = { {12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:25], instruction[24:21], 1'b0};
+  logic [31:0] branch_addy = pc + (imm_instr << 32'b1);
+  
+  logic address_sel = branch_en & isZero;
 
-  assign pc_out = pc; // capture pc
-  logic pc4 = pc_out + 32'd4; // add 4 to pc
+  mux2to1 m3(.signal_0 (pc4),
+             .signal_1 (branch_addy),
+             .sel      (address_sel),
 
-  imem imem1(.a(pc_out[9:0]), .rd(instruction));
+             .src      (pc_next)
+             );
+
+  imem imem1(.a(pc), .rd(instruction));
  
   logic [3:0] alu_op;
   logic branch_en, mem_read, mem_to_reg;
@@ -39,13 +45,44 @@ module rv32im_top (
                     .alu_src    (alu_src),
                     .reg_write  (reg_write)
                     );
+
+
+  logic [31:0] imm_instr;
+  imm_gen imm_gen1(.instruction (instruction),
+                   .imm_instr   (imm_instr)
+                   );
+
+  logic [31:0] alu_src_in; // alu source input
+  mux2to1 m1(.signal_0 (read_data_out2),
+             .signal_1 (imm_instr), 
+             .sel      (alu_src), 
+
+             .src      (alu_src_in)
+             );
+
+  logic [31:0] dmem_read_data;
+  dmem dmem1(.clk(clk),
+             .write_en (mem_write),
+             .addr     (alu_result),
+             .wd       (read_data_out2),
+
+             .rd       (dmem_read_data) // read data
+    );
+  
+  logic [31:0] reg_wd_src;
+  mux2to1 m2(.signal_0 (alu_result),
+             .signal_1 (dmem_read_data), 
+             .sel      (mem_to_reg), 
+
+             .src      (reg_wd_src)
+             );
   
   logic [31:0] read_data_out1, read_data_out2;
   registerfile rf(.clk (clk),
                   .rs1 (instruction[19:15]),
                   .rs2 (instruction[24:20]),
                   .rd  (instruction[11:7]),
-                  .wd  ([31:0]), // output from data memory mux
+                  .wd  (reg_wd_src), // output from data memory mux
                   .we  (reg_write), // from control unit 
 
                   .rd1 (read_data_out1), // read data
@@ -56,20 +93,10 @@ module rv32im_top (
   logic isZero;
   alu alu1(.alu_op     (alu_op),
            .srcA       (read_data_out1), // rs1
-           .srcB       (read_data_out2), // rs2 or imm+sign_extended
+           .srcB       (alu_src_in), // rs2 or imm+sign_extended
 
            .alu_result (alu_result),
            .isZero     (isZero)
            );
-
-
-  logic [31:0] dmem_read_data;
-  dmem dmem1(.clk(clk),
-             .write_en (mem_write),
-             .addr     (alu_result),
-             .wd       (read_data_out2),
-
-             .rd       (dmem_read_data) // read data
-    );
 
 endmodule

@@ -12,7 +12,7 @@ module control_unit (
   output logic regwrite
 );
 
-  
+// TODO make combinational
 //---------------- decoding instruction type
   // assignment based on opcode
   logic alu_reg = (opcode [6:0] == 7'b0110011); 
@@ -29,7 +29,7 @@ module control_unit (
 //--------------- decoding into proper ALU signals
   always_comb begin
     case (funct3)
-      3'b000: alu_op = (alu_reg && funct7[5]) ? 4'b0110 : 4'b0010; // sub/add()
+      3'b000: alu_op = (alu_reg && funct7[5]) ? 4'b0110 : 4'b0010; // sub/add(i)
       3'b001: alu_op = 4'b0101; // sll(i)
       3'b010: alu_op = 4'b0011; // slt(i)
       3'b011: alu_op = 4'b0111; // sltu(iu)
