@@ -6,12 +6,13 @@ module alu (
   output logic isZero
 );
 
+
 always_comb begin
   case (alu_op)
     4'b0000: alu_result = srcA & srcB; // AND, ANDI
     4'b0001: alu_result = srcA | srcB; // OR, ORI
     4'b0010: alu_result = srcA + srcB; // ADD, ADDI, LW, SW
-    4'b0011: alu_result = ($signed(srcA) < $signed(srcB)) ? 32'b1 : 32'b0; // SLT, SLTI, BLT, BGE
+    4'b0011: alu_result = ($signed(srcA) < $signed(srcB)) ? 32'b1 : 32'b0; // SLT, SLTI, BLT, BG
     4'b0100: alu_result = srcA ^ srcB; // XOR, XORI
     4'b0101: alu_result = srcA << (srcB[4:0]); // SLL, SLLI
     4'b0110: alu_result = srcA - srcB; // SUB, BEQ, BNE

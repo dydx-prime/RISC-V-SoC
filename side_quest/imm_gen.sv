@@ -1,20 +1,25 @@
 module imm_gen (
-  input [31:0] instruction,
+  input [31:0] instr,
   output logic [31:0] imm_instr
 );
 
-
-
-//TODO place into combinational block
 //---------------- generating immediates
-  logic [31:0] i_imm = { {21{instruction[31]}}, instruction[30:25], instruction[24:21], instruction[20]};
-  logic [31:0] s_imm = { {21{instruction[31]}}, instruction[30:25], instruction[11: 8], instruction[ 7]};
-  logic [31:0] u_imm = { instruction[31], instruction[30:20], instruction[19:12], 12'b0};
-  logic [31:0] b_imm = { {20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0}; 
-  logic [31:0] j_imm = { {12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:25], instruction[24:21], 1'b0};
+  logic [31:0] i_imm;
+  logic [31:0] s_imm; 
+  logic [31:0] u_imm; 
+  logic [31:0] b_imm; 
+  logic [31:0] j_imm; 
+
+  always_comb begin
+    i_imm = { {21{instr[31]}}, instr[30:25], instr[24:21], instr[20]};
+    s_imm = { {21{instr[31]}}, instr[30:25], instr[11: 8], instr[ 7]};
+    u_imm = { instr[31], instr[30:20], instr[19:12], 12'b0};
+    b_imm = { {20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0}; 
+    j_imm = { {12{instr[31]}}, instr[19:12], instr[20], instr[30:25], instr[24:21], 1'b0};
+  end
   
   //logic alu_reg = (opcode [6:0] == 7'b0110011);
-  parameter logic [6:0] alu_imm = 7'b0010011, 
+  localparam logic [6:0] alu_imm = 7'b0010011, 
                         jal     = 7'b1101111,
                         jalr    = 7'b1100111,
                         lui     = 7'b0110111,
@@ -24,10 +29,10 @@ module imm_gen (
                         store   = 7'b0100011,
                         system  = 7'b1110011; // ECALL, EBREAK // FIXME look if needed inside imm_gen
   always_comb begin
-    case (instruction[6:0]) // opcode
+    case (instr[6:0]) // opcode
       alu_imm: imm_instr = i_imm;
       store: imm_instr = s_imm;
-      load: imm_instr = i_mm;
+      load: imm_instr = i_imm;
       jal: imm_instr = j_imm;
       branch: imm_instr = b_imm;
       lui: imm_instr = u_imm;

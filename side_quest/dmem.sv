@@ -15,7 +15,7 @@ module dmem (
     if(write_en) begin
       RAM[word_addr] <= wd;
     end
+    rd <= RAM[word_addr];
   end
 
-    assign rd = RAM[word_addr];
 endmodule
