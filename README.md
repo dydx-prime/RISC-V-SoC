@@ -1,8 +1,6 @@
 # RISC-V-SoC
 
-> TLDR: RV32I multicycle core able to run basic programs (yay). Can call it an SoC lowkey because it has UART, but nothing crazy of course. Plans are to work on a pipelined core RV32IM.
-
-RV32I Core w/ some protocols (maybe). Synthesizable FPGA code.
+Notes for rv32i
 
 ## RV32I Spec
 
@@ -137,7 +135,3 @@ Sign extension always uses instruction bit `inst[31]`.
 | 31-20    | 19-12       | 11       | 10-5        | 4-1         | 0 |
 | -------- | ----------- | -------- | ----------- | ----------- | - |
 | inst[31] | inst[19:12] | inst[20] | inst[30:25] | inst[24:21] | 0 |
-
-## What Can it Run?
-
-// Add stuff 
